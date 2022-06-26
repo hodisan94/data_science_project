@@ -20,14 +20,8 @@ def read_xlsx(path):
         return None
     else:
         df = pd.read_excel(path)
-        # print(df)
-        # adding commit
         return df
-    # if path.endswith(".xlsx"):
-    #     df = pd.read_excel(path)
-    #     return df
-    # else:
-    #     return None
+
 
 # fill NA values with mean value of the coulmn
 def complete_vals(df):
