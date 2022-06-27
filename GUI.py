@@ -6,6 +6,13 @@ import pandas as pd
 import matplotlib
 from matplotlib.pyplot import plot
 import openpyxl
+matplotlib.use('TkAgg')
+from matplotlib.figure import Figure
+from PIL import Image, ImageTk
+from matplotlib.backends.backend_tkagg import (
+    FigureCanvasTkAgg,
+    NavigationToolbar2Tk
+)
 
 class GUI:
 
@@ -17,7 +24,7 @@ class GUI:
     def __init__(self, master):
 
         self.master = master
-        master.title("GUI")
+        master.title("“K Means Clustering")
         self.data = None
         self.path = None
         self.is_preprocess = False
@@ -93,7 +100,7 @@ class GUI:
 
     def preProcess(self):
         if self.path is None:
-            messagebox.showinfo(title="GUI", message="\n You need to select a file first.")
+            messagebox.showinfo(title="“K Means Clustering", message="\n You need to select a file first.")
             return
         self.data = pp.read_xlsx(self.path)
         if self.data is not None:
@@ -101,19 +108,34 @@ class GUI:
             self.data = pp.normalization_vals(self.data)
             self.data = pp.group_data(self.data)
             pp.export_to_excel(self.df)
-            messagebox.showinfo(title="GUI", message="\n Preprocessing completed successfully!")
+            messagebox.showinfo(title="“K Means Clustering", message="\n Preprocessing completed successfully!")
             self.is_preprocess = True
 
         else:
-            messagebox.showinfo(title="GUI", message="\n You need to select a valid excel file.")
+            messagebox.showinfo(title="“K Means Clustering", message="\n You need to select a valid excel file.")
 
 
     def clustering(self):
         if self.is_preprocess is not True:
             # checking if we Preprocessed the data
-            messagebox.showinfo(title="GUI", message="\n You must Preprocess the data first")
+            messagebox.showinfo(title="“K Means Clustering", message="\n You must Preprocess the data first")
         else:
             self.cluster_model = cl.Kmeans_clus(self.data, self.cluster_num, self.run_num)
+            figure = cl.scatter_plot(self.cluster_model)
+            plot_canvas = FigureCanvasTkAgg(figure, master=root)
+            plot_canvas.draw()
+            plot_canvas.get_tk_widget().grid(row=10, column=0)
+
+            if cl.horopleth_map(self.cluster_model):
+                img = Image.open("choropleth.png")
+                im_tk = ImageTk.PhotoImage(img.resize((500, 400)))
+                country_canvas_tk = Label(root, image=im_tk)
+                country_canvas_tk.image = im_tk
+                country_canvas_tk.grid(column=1, row=10)
+                messagebox.showinfo(title="K Means Clustering", message="\n The clustering process has been completed!")
+
+
+
 
 root = Tk()
 root.geometry("450x250")
