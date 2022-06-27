@@ -28,6 +28,7 @@ def complete_vals(df):
     df = df.fillna(df.mean())
     return df
 
+# normalization by standardization
 def normalization_vals(df):
     columns = df.columns.to_list()
     for i in columns:
@@ -44,3 +45,8 @@ def group_data(df):
     g1 = df.groupby(['country'], as_index=False).mean()
     g1.drop('year', inplace=True, axis=1)
     return g1
+
+def export_to_excel(df):
+    df.to_excel("PPData.xlsx")
+    return
+

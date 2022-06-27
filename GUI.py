@@ -1,5 +1,6 @@
 from tkinter import Tk, Label, Button, Entry, IntVar, W, filedialog, messagebox
 import preProcess as pp
+import Clustering as cl
 import os
 import pandas as pd
 import matplotlib
@@ -17,29 +18,31 @@ class GUI:
 
         self.master = master
         master.title("GUI")
-        self.data=None
+        self.data = None
         self.path = None
-
-        self.total = 0
-        self.entered_number = 0
+        self.is_preprocess = False
+        self.cluster_num = IntVar()
+        self.run_num = IntVar()
+        self.cluster_model = None
 
         self.total_label_text = IntVar()
-        self.total_label_text.set(self.total) # need to delete this but its a good example
-        self.total_label = Label(master, textvariable=self.total_label_text) # need to delete this but its a good example
+        # self.total_label_text.set(self.total) # need to delete this but its a good example
+        # self.total_label = Label(master, textvariable=self.total_label_text) # need to delete this but its a good example
 
         self.label_cluster = Label(master, text="Number of clusters k:")
         self.label_num_of_runs = Label(master, text="Number of runs:")
 
-        vcmd = master.register(self.validate) # we have to wrap the command
-        self.entry_cluster_num = Entry(master, validate="key", validatecommand=(vcmd, '%P'))
-        self.entry_run_num = Entry(master, validate="key", validatecommand=(vcmd, '%P'))
+        vcmd1 = master.register(self.validate) # we have to wrap the command
+        vcmd2 = master.register(self.validate) # we have to wrap the command
+        self.entry_cluster_num = Entry(master, validate="key", validatecommand=(vcmd1, '%P'), textvariable=self.cluster_num)
+        self.entry_run_num = Entry(master, validate="key", validatecommand=(vcmd2, '%P'), textvariable=self.run_num)
 
         # Create a File Explorer label
         self.label_file_explorer = Label(master, text="File Explorer")
 
         self.button_explore = Button(master, text="Browse Files", command=self.browseFiles)
-        self.button_preprocess = Button(master, text="Pre-process" , command=self.preProcess)
-        self.button_cluster_maker = Button(master, text="Cluster")
+        self.button_preprocess = Button(master, text="Pre-process", command=self.preProcess)
+        self.button_cluster_maker = Button(master, text="Cluster", command=self.clustering)
 
         # Grid method is chosen for placing
         # the widgets at respective positions
@@ -87,16 +90,30 @@ class GUI:
         # set the path
         self.path = filename
 
+
     def preProcess(self):
+        if self.path is None:
+            messagebox.showinfo(title="GUI", message="\n You need to select a file first.")
+            return
         self.data = pp.read_xlsx(self.path)
-        self.data = pp.complete_vals(self.data)
-        self.data = pp.normalization_vals(self.data)
-        self.data = pp.group_data(self.data)
-        messagebox.showinfo(title="GUI", message="\n Preprocessing completed successfully!")
+        if self.data is not None:
+            self.data = pp.complete_vals(self.data)
+            self.data = pp.normalization_vals(self.data)
+            self.data = pp.group_data(self.data)
+            pp.export_to_excel(self.df)
+            messagebox.showinfo(title="GUI", message="\n Preprocessing completed successfully!")
+            self.is_preprocess = True
+
+        else:
+            messagebox.showinfo(title="GUI", message="\n You need to select a valid excel file.")
 
 
-
-
+    def clustering(self):
+        if self.is_preprocess is not True:
+            # checking if we Preprocessed the data
+            messagebox.showinfo(title="GUI", message="\n You must Preprocess the data first")
+        else:
+            self.cluster_model = cl.Kmeans_clus(self.data, self.cluster_num, self.run_num)
 
 root = Tk()
 root.geometry("450x250")
