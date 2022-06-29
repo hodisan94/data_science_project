@@ -1,38 +1,35 @@
-from platform import platform
 from matplotlib.figure import Figure
-import pandas as pd
-import os
-from sklearn import cluster
 from sklearn.cluster import KMeans
-import matplotlib.pyplot as plt
-import preProcess as pp
-
-import numpy as np
 import plotly.express as px
-# import chart_studio.plotly as py
-import plotly.plotly as py
+import chart_studio.plotly as py
 from urllib.request import urlopen
 import json
 
 # creating a Kmeans cluster
 def Kmeans_clus(df, n_clusters, n_init):
+    # creating a Kmeans model
     res = KMeans(n_clusters=n_clusters, init='random', n_init=n_init).fit_predict(df.iloc[:, 1:])
     df["Cluster"] = res
     return df
 
 def scatter_plot(df):
-    fig = Figure(figsize=(4, 4))
-    # plt1 = fig.add_subplot(111) ?!!?!?!?!??!?!?!?!?!?!?!
-    plot = plt.scatter(df["Social support"].to_numpy(), df["Generosity"].to_numpy(), s=9, c=df["Cluster"], alpha=0.5)
+    # creating a plot based on Social support and Generosity
+
+    cluster_list = []
+    fig = Figure(figsize=(5, 5))
+    our_plot_fig = fig.add_subplot(111)
 
     cluster_list = df['Cluster'].unique().tolist()
-    cluster_list = cluster_list.sort()
+    cluster_list.sort()
+    x = df["Social support"].to_numpy()
+    y = df["Generosity"].to_numpy()
+    color = df["Cluster"]
+    plot = our_plot_fig.scatter(x, y, s=9, c=color, alpha=0.5)
     cluster_list.append(len(cluster_list))
-    plt.title("Social support as a dependency In attribute values of Generosity")
-    plt.xlabel("Social support")
-    plt.ylabel("Generosity")
     fig.colorbar(plot, boundaries=cluster_list)
-
+    our_plot_fig.title.set_text("Attribute values of Generosity depend on attribute values of Social support")
+    our_plot_fig.set_xlabel("Social support")
+    our_plot_fig.set_ylabel("Generosity")
     return fig
 
 
@@ -40,19 +37,22 @@ def horopleth_map(df):
     # we want the length of the column to set to color range
     length=len(df['Cluster'].unique().tolist()) - 1
     try:
+
         with urlopen('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json') as response:
             counties = json.load(response)
 
-            fig = px.choropleth(df, geojson=counties, locations=df['country'], color=df['Cluster'],
-                            range_color=(0, length),
-                            locationmode="country names",
-                            scope="world",
-                            labels={'unemp': 'Cluster'}
-                            )
-            fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0}, title_text="choropleth map of Kmeans clustering by countries")
-            fig.show()
+            fig = px.choropleth(geojson=counties, locations=df['country'], color=df['Cluster'],
+                                range_color=(0, length),
+                                locationmode="country names",
+                                scope="world",
+                                labels={'unemp': 'Clusters'}
+                                )
+            fig.update_layout(margin={"r": 1, "t": 1, "l": 1, "b": 1},
+                              title_text='K Means Clustering Visualization Per Country',
+                              width=700,
+                              height=700)
 
-            py.sing_in("hodisan94", "P023ybcdxGVcC131IZ7V")
+            py.sign_in("dhodisan", "3DyTzFJLcEaiLra9IEIT")
             py.image.save_as(fig, filename='choropleth.png')
         return True
     except:

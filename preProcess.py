@@ -1,16 +1,6 @@
-from platform import platform
-from matplotlib.figure import Figure
 import pandas as pd
 import os
-from sklearn import cluster
-from sklearn.cluster import KMeans
-import matplotlib.pyplot as plt
 
-import numpy as np
-import plotly.express as px
-# import chart_studio.plotly as py
-from urllib.request import urlopen
-import json
 
 # checks that the file is with xlsx ending and read the the file.
 def read_xlsx(path):

@@ -1,13 +1,10 @@
 from tkinter import Tk, Label, Button, Entry, IntVar, W, filedialog, messagebox
 import preProcess as pp
 import Clustering as cl
-import os
-import pandas as pd
+
 import matplotlib
-from matplotlib.pyplot import plot
-import openpyxl
+
 matplotlib.use('TkAgg')
-from matplotlib.figure import Figure
 from PIL import Image, ImageTk
 from matplotlib.backends.backend_tkagg import (
     FigureCanvasTkAgg,
@@ -41,7 +38,7 @@ class GUI:
 
         vcmd1 = master.register(self.validate) # we have to wrap the command
         vcmd2 = master.register(self.validate) # we have to wrap the command
-        self.entry_cluster_num = Entry(master, validate="key", validatecommand=(vcmd1, '%P'), textvariable=self.cluster_num)
+        self.entry_cluster_num = Entry(master, validate="key", validatecommand=(vcmd1, '%P'),textvariable=self.cluster_num)
         self.entry_run_num = Entry(master, validate="key", validatecommand=(vcmd2, '%P'), textvariable=self.run_num)
 
         # Create a File Explorer label
@@ -99,15 +96,26 @@ class GUI:
 
 
     def preProcess(self):
+        # check if the file is empty
+        is_it_ok = self.check_file()
+        # check if the number are ok
+        is_it_ok2 = self.check_nums(self.cluster_num, self.run_num)
+
         if self.path is None:
             messagebox.showinfo(title="“K Means Clustering", message="\n You need to select a file first.")
+            return
+        if is_it_ok is not True:
+            messagebox.showinfo(title="“K Means Clustering", message="\n You need to select a none empty excel file first.")
+            return
+        elif is_it_ok2 is not True:
+            messagebox.showinfo(title="“K Means Clustering", message="\n You must choose number of clusters and number of runs (both bigger then 0 when number of runs is limited to 100 and number of clusters is limited to 40.)")
             return
         self.data = pp.read_xlsx(self.path)
         if self.data is not None:
             self.data = pp.complete_vals(self.data)
             self.data = pp.normalization_vals(self.data)
             self.data = pp.group_data(self.data)
-            pp.export_to_excel(self.df)
+            pp.export_to_excel(self.data)
             messagebox.showinfo(title="“K Means Clustering", message="\n Preprocessing completed successfully!")
             self.is_preprocess = True
 
@@ -115,33 +123,64 @@ class GUI:
             messagebox.showinfo(title="“K Means Clustering", message="\n You need to select a valid excel file.")
 
 
+    def check_file(self):
+        checker = pp.read_xlsx(self.path)
+        is_it = checker.empty
+        if is_it is True:
+            return False
+        return True
+
     def clustering(self):
+        is_it_ok2 = self.check_nums(self.cluster_num, self.run_num)
         if self.is_preprocess is not True:
             # checking if we Preprocessed the data
             messagebox.showinfo(title="“K Means Clustering", message="\n You must Preprocess the data first")
+        elif is_it_ok2 is not True:
+            messagebox.showinfo(title="“K Means Clustering", message="\n You must choose number of clusters and number of runs (both bigger then 0 when number of runs is limited to 100 and number of clusters is limited to 40.)")
+            return
         else:
-            self.cluster_model = cl.Kmeans_clus(self.data, self.cluster_num, self.run_num)
+            self.cluster_model = cl.Kmeans_clus(self.data, self.cluster_num.get(), self.run_num.get())
             figure = cl.scatter_plot(self.cluster_model)
             plot_canvas = FigureCanvasTkAgg(figure, master=root)
             plot_canvas.draw()
-            plot_canvas.get_tk_widget().grid(row=10, column=0)
+            plot_canvas.get_tk_widget().grid(row=10, column=1)
 
             if cl.horopleth_map(self.cluster_model):
                 img = Image.open("choropleth.png")
                 im_tk = ImageTk.PhotoImage(img.resize((500, 400)))
-                country_canvas_tk = Label(root, image=im_tk)
-                country_canvas_tk.image = im_tk
-                country_canvas_tk.grid(column=1, row=10)
-                messagebox.showinfo(title="K Means Clustering", message="\n The clustering process has been completed!")
+                tk_canvas = Label(root, image=im_tk)
+                tk_canvas.image = im_tk
+                tk_canvas.grid(column=0, row=10)
+                messagebox.showinfo(title="K Means Clustering",
+                                    message="\n The clustering process was successfully completed!")
+
+    def check_nums(self, cluster_num, run_num):
+        try:
+            c_num = cluster_num.get()
+        except:
+            return False
+        try:
+            r_num = run_num.get()
+        except:
+            return False
+        if c_num > 0 and r_num > 0:
+            if r_num < 101:
+                if c_num < 41:
+                    return True
+                else:
+                    return False
+            else:
+                return False
+        else:
+            return False
 
 
+if __name__ == "__main__":
+    root = Tk()
+    root.geometry("950x750")
 
-
-root = Tk()
-root.geometry("450x250")
-
-my_gui = GUI(root)
-root.mainloop()
+    my_gui = GUI(root)
+    root.mainloop()
 
 
 
