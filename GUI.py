@@ -21,7 +21,7 @@ class GUI:
     def __init__(self, master):
 
         self.master = master
-        master.title("“K Means Clustering")
+        master.title("K Means Clustering")
         self.data = None
         self.path = None
         self.is_preprocess = False
@@ -102,25 +102,24 @@ class GUI:
         is_it_ok2 = self.check_nums(self.cluster_num, self.run_num)
 
         if self.path is None:
-            messagebox.showinfo(title="“K Means Clustering", message="\n You need to select a file first.")
+            messagebox.showinfo(title="K Means Clustering", message="\n You need to select a file first.")
             return
         if is_it_ok is not True:
-            messagebox.showinfo(title="“K Means Clustering", message="\n You need to select a none empty excel file first.")
+            messagebox.showinfo(title="K Means Clustering", message="\n You need to select a none empty excel file first.")
             return
         elif is_it_ok2 is not True:
-            messagebox.showinfo(title="“K Means Clustering", message="\n You must choose number of clusters and number of runs (both bigger then 0 when number of runs is limited to 100 and number of clusters is limited to 40.)")
+            messagebox.showinfo(title="K Means Clustering", message="\n You must choose number of clusters and number of runs (both bigger then 0 when number of runs is limited to 100 and number of clusters is limited to 40.)")
             return
         self.data = pp.read_xlsx(self.path)
         if self.data is not None:
-            self.data = pp.complete_vals(self.data)
+            self.data = pp.complete_vals(self.data) # filling null values
             self.data = pp.normalization_vals(self.data)
             self.data = pp.group_data(self.data)
-            pp.export_to_excel(self.data)
-            messagebox.showinfo(title="“K Means Clustering", message="\n Preprocessing completed successfully!")
+            messagebox.showinfo(title="K Means Clustering", message="\n Preprocessing completed successfully!")
             self.is_preprocess = True
 
         else:
-            messagebox.showinfo(title="“K Means Clustering", message="\n You need to select a valid excel file.")
+            messagebox.showinfo(title="K Means Clustering", message="\n You need to select a valid excel file.")
 
 
     def check_file(self):
@@ -134,12 +133,13 @@ class GUI:
         is_it_ok2 = self.check_nums(self.cluster_num, self.run_num)
         if self.is_preprocess is not True:
             # checking if we Preprocessed the data
-            messagebox.showinfo(title="“K Means Clustering", message="\n You must Preprocess the data first")
+            messagebox.showinfo(title="K Means Clustering", message="\n You must Preprocess the data first")
         elif is_it_ok2 is not True:
-            messagebox.showinfo(title="“K Means Clustering", message="\n You must choose number of clusters and number of runs (both bigger then 0 when number of runs is limited to 100 and number of clusters is limited to 40.)")
+            messagebox.showinfo(title="K Means Clustering", message="\n You must choose number of clusters and number of runs (both bigger then 0 when number of runs is limited to 100 and number of clusters is limited to 40.)")
             return
         else:
             self.cluster_model = cl.Kmeans_clus(self.data, self.cluster_num.get(), self.run_num.get())
+            pp.export_to_excel(self.cluster_model) # export the new data set into a new excel file
             figure = cl.scatter_plot(self.cluster_model)
             plot_canvas = FigureCanvasTkAgg(figure, master=root)
             plot_canvas.draw()
